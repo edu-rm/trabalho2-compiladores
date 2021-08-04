@@ -15,11 +15,6 @@ import java.util.ArrayList;
 public class Calculadora{
 	private ArrayList<String> numbers = new ArrayList<String>();
 	private double finalResultAcumulator = 0;
-  	
-  	private void emit(String s)
-	  {
-//	    System.out.print(s + " ");
-	  }
 
 	private void push(String s)
 	  {
@@ -30,53 +25,38 @@ public class Calculadora{
 	  
 	private void pop(String s)
 	  {
-	    System.out.println("");
-	    System.out.println("");
 	    int lastElement = numbers.size()-1;
 	    String pile = numbers.get(lastElement);
 	    String pileNext = numbers.get(lastElement-1); 
-	    System.out.println("pile:"+pile);
-	    System.out.println("pile next:"+pileNext);
-	    double resultOfOperation = 0;
+
+		double pileNextParsed = Double.parseDouble(pileNext);
+		double pileParsed = Double.parseDouble(pile);
+
+	    double resultOfOperation = 0;	    
 		switch (s) {
 		  case "+":
-			resultOfOperation = Double.parseDouble(pile) + Double.parseDouble(pileNext);
+			resultOfOperation = pileNextParsed + pileParsed ;
 		    break;
 		  case "-":
-			resultOfOperation = Double.parseDouble(pile) - Double.parseDouble(pileNext);
+			resultOfOperation = pileNextParsed - pileParsed ;
 		    break;
 	      case "/":
-			resultOfOperation = Double.parseDouble(pile) / Double.parseDouble(pileNext);
+			resultOfOperation = pileNextParsed / pileParsed;
 		    break;
 		  case "*":
-			resultOfOperation = Double.parseDouble(pile) * Double.parseDouble(pileNext);
+			resultOfOperation = pileNextParsed * pileParsed;
 			break;
 		  case "^":
-
+			resultOfOperation = Math.pow(pileNextParsed, pileParsed);
 		    break;
 		  }
 		  
 		finalResultAcumulator = resultOfOperation;
+		System.out.println("resultOfOperation:"+resultOfOperation);
 		numbers.remove(lastElement);
 		numbers.remove(lastElement-1);
 		numbers.add(Double.toString(finalResultAcumulator));
-//myList.remove(0);
-	    
 	  }
-	 
-//	public static void main(String args []) throws ParseException
-//	{
-// 		try{
-// 			System.out.println("Lendo arquivo fonte...");
-// 			FileInputStream fis = new FileInputStream(new File("..//Calculadora//src//fonte.txt"));
-// 			Calculadora parser = new Calculadora(fis);
-// 			parser.Start();
-// 			System.out.println("Resultado " + qtdDigitosUm);
-// 		}catch (IOException e){
-// 			System.out.println("Falha ao abrir arquivo fonte.");
-// 			System.exit(0);
-// 		}
-// 	}
 }
 
 PARSER_END(Calculadora)
@@ -101,65 +81,55 @@ TOKEN : {
   <EQUALS: "=" >
 }
 
-void operators():
-{}
-{
-	(<PLUS> | <MINUS> | <TIMES> | <DIVISION> | <POWER>)
-}
-
-// Expresion - é o fatorial (número ou uma expr entre paretêses) e uma Expr1
 void Expr() :
 {}
 {
   Termo() Expr1()
 }
 
-// Expresion1 - é um mais seguido de um Termo
 void Expr1() : {}
 {
-  < PLUS > Termo() { emit("+"); pop("+"); } Expr1() | {}
+  < PLUS > Termo() { pop("+"); } Expr1() | {}
 }
 
-// Termo - 
 void Termo() :
 {}
 {
-  Fator() Termo1() Termo2() Termo3() Termo4()
+  Fator() Multi() Divi() Pot() Min()
 }
 
-// Termo1 - é uma multiplicação seguido de um fator e ele mesmo OU nada
-void Termo1() :
+// Multi - é uma multiplicação seguido de um fator e ele mesmo OU nada
+void Multi() :
 {}
 {
-  < TIMES > Fator() { emit("*"); pop("*"); } Termo1() | {}
+  < TIMES > Fator() { pop("*"); } Multi() | {}
 }
 
-void Termo2() :
+void Divi() :
 {}
 {
-  < DIVISION > Fator() { emit("/"); pop("/"); } Termo2() | {}
+  < DIVISION > Fator() { pop("/"); } Divi() | {}
 }
 
-void Termo3() :
+void Pot() :
 {}
 {
-  < POWER > Fator() { emit("^"); pop("^"); } Termo3() | {}
+  < POWER > Fator() { pop("^"); } Pot() | {}
 }
 
-void Termo4() :
+void Min() :
 {}
 {
-  < MINUS > Fator() { emit("-"); pop("-"); } Termo4() | {}
+  < MINUS > Fator() { pop("-"); } Min() | {}
 }
 
 
-// Fator - Número ou uma expression entre parentêses
+// Fator - Número ou uma exp entre parentêses
 void Fator() : { Token t; }
 {
   t = <NUMBER> { push(t.image); }
   |
   < OPEN_PARENTHESES >
-	// O que ta aqui deve ser executado por primeiro?
   	Expr()
   < CLOSE_PARENTHESES >
 }
@@ -170,7 +140,6 @@ double Start() :
   finalResultAcumulator = 0;
 }
 {
-// (<NUMBER> | "(" Expr() ")") Termo1() Termo2() Termo3() Termo4() Expr1() <EOF>
 	Expr()
  {
    return finalResultAcumulator;
