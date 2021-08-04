@@ -1,0 +1,120 @@
+options
+{
+	static = false;
+}
+
+PARSER_BEGIN(Calculadora)
+
+package calc;
+
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.IOException;
+public class Calculadora{
+  	public static int qtdDigitosUm = 0;
+	public static void main(String args []) throws ParseException
+	{
+ 		try{
+ 			System.out.println("Lendo arquivo fonte...");
+ 			FileInputStream fis = new FileInputStream(new File("..//Calculadora//src//fonte.txt"));
+ 			Calculadora parser = new Calculadora(fis);
+ 			parser.Start();
+ 			System.out.println("Resultado " + qtdDigitosUm);
+ 		}catch (IOException e){
+ 			System.out.println("Falha ao abrir arquivo fonte.");
+ 			System.exit(0);
+ 		}
+ 	}
+}
+
+PARSER_END(Calculadora)
+
+SKIP : { " "| "\t" | "\n" | "\r" }
+TOKEN : { <EOL: ";" > }
+TOKEN : {
+  < NUMBER : (< digito >)+ > |
+  < #digito : [ "0"-"9" ] >
+}
+
+// Operandos
+TOKEN : {
+  <PLUS: "+" > | <MINUS: "-" > |
+  <TIMES: "*" > | <DIVISION: "/" > |
+  <POWER: "^" >
+}
+
+// Símbolos
+TOKEN : {
+  <OPEN_PARENTHESES: "(" > | <CLOSE_PARENTHESES: ")" > |
+  <EQUALS: "=" >
+}
+
+void operators():
+{}
+{
+	(<PLUS> | <MINUS> | <TIMES> | <DIVISION> | <POWER>)
+}
+
+// Expresion - é o fatorial (número ou uma expr entre paretêses) e uma Expr1
+void Expr() :
+{}
+{
+  Termo() Expr1()
+}
+
+// Expresion1 - é um mais seguido de um Termo
+void Expr1() : {}
+{
+  < PLUS > Termo() Expr1() | {}
+}
+
+// Termo - 
+void Termo() :
+{}
+{
+  Fator() Termo1() Termo2() Termo3() Termo4()
+}
+
+// Termo1 - é uma multiplicação seguido de um fator e ele mesmo OU nada
+void Termo1() :
+{}
+{
+  < TIMES > Fator() Termo1() | {}
+}
+
+void Termo2() :
+{}
+{
+  < DIVISION > Fator() Termo2() | {}
+}
+
+void Termo3() :
+{}
+{
+  < POWER > Fator() Termo3() | {}
+}
+
+void Termo4() :
+{}
+{
+  < MINUS > Fator() Termo4() | {}
+}
+
+
+// Fator - Número ou uma expression entre parentêses
+void Fator() : { Token t; }
+{
+  t = <NUMBER> | < OPEN_PARENTHESES > Expr() < CLOSE_PARENTHESES >
+}
+
+
+int Start() :
+{
+}
+{
+ (<NUMBER> | "(" Expr() ")") Termo1() Termo2() Termo3() Termo4() Expr1() <EOF>
+ {
+   return 1;
+ }
+}
+
