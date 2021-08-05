@@ -1,6 +1,6 @@
 options
 {
-	static = false;
+	static = false;	
 }
 
 PARSER_BEGIN(Calculadora)
@@ -18,7 +18,6 @@ public class Calculadora{
 
 	private void push(String s)
 	  {
-	    System.out.println("Pushed:" + s);
 		numbers.add(s);
 	  }
 	 
@@ -52,7 +51,7 @@ public class Calculadora{
 		  }
 		  
 		finalResultAcumulator = resultOfOperation;
-		System.out.println("resultOfOperation:"+resultOfOperation);
+
 		numbers.remove(lastElement);
 		numbers.remove(lastElement-1);
 		numbers.add(Double.toString(finalResultAcumulator));
@@ -81,15 +80,15 @@ TOKEN : {
   <EQUALS: "=" >
 }
 
-void Expr() :
+void Left() :
 {}
 {
-  Termo() Expr1()
+  Termo() Right()
 }
 
-void Expr1() : {}
+void Right() : {}
 {
-  < PLUS > Termo() { pop("+"); } Expr1() | {}
+  < PLUS > Termo() { pop("+"); } Right() | {}
 }
 
 void Termo() :
@@ -125,14 +124,23 @@ void Min() :
 
 
 // Fator - Número ou uma exp entre parentêses
-void Fator() : { Token t; }
+void Fator() : { Token t, t1 = null; }
 {
-  t = <NUMBER> { push(t.image); }
+  
+  ( t1 = < MINUS >| t1 = < PLUS >)? t = <NUMBER>
+  {
+	String toPush = t.image;
+	if (t1 != null) {
+		toPush = t1.image + toPush;
+	}
+    push(toPush);
+  }
   |
   < OPEN_PARENTHESES >
-  	Expr()
+  	Left()
   < CLOSE_PARENTHESES >
 }
+
 
 
 double Start() :
@@ -140,7 +148,7 @@ double Start() :
   finalResultAcumulator = 0;
 }
 {
-	Expr()
+	Left()
  {
    return finalResultAcumulator;
  }
